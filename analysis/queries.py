@@ -41,3 +41,30 @@ def get_common_input_ownership_query():
         "WITH addr1, addr2 WHERE elementId(addr1) < elementId(addr2) "
         "MERGE (addr1)-[:SAME_ENTITY]-(addr2)"
     )
+
+def get_fan_out_query(min_outputs=10, max_inputs=2):
+    """
+    Trova transazioni di "distribuzione" (fan-out), potenziale smurfing.
+    Cerca transazioni con pochi input e molti output.
+    """
+    # AGGIORNATO: Sostituito size() con COUNT {}
+    return (
+        "MATCH (t:Transaction) "
+        "WHERE COUNT { (t)<-[:SENT]-() } <= $max_inputs "
+        "AND COUNT { (t)-[:RECEIVED]->() } >= $min_outputs "
+        "RETURN t.txid AS txid, COUNT { (t)<-[:SENT]-() } AS inputs, COUNT { (t)-[:RECEIVED]->() } AS outputs"
+    )
+
+def get_fan_in_query(min_inputs=10, max_outputs=2):
+    """
+    Trova transazioni di "consolidamento" (fan-in), potenziale sweep.
+    Cerca transazioni con molti input e pochi output.
+    """
+    # AGGIORNATO: Sostituito size() con COUNT {}
+    return (
+        "MATCH (t:Transaction) "
+        "WHERE COUNT { (t)<-[:SENT]-() } >= $min_inputs "
+        "AND COUNT { (t)-[:RECEIVED]->() } <= $max_outputs "
+        "RETURN t.txid AS txid, COUNT { (t)<-[:SENT]-() } AS inputs, COUNT { (t)-[:RECEIVED]->() } AS outputs"
+    )
+

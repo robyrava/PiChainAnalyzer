@@ -18,4 +18,5 @@ class Neo4jConnector:
     def execute_query(self, query, parameters=None):
         """Esegue una query su Neo4j."""
         with self._driver.session() as session:
-            return session.run(query, parameters)
+            results = session.run(query, parameters)
+            return list(results) 
